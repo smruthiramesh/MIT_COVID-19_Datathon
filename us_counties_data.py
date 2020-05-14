@@ -18,16 +18,12 @@ dates = [pd.to_datetime(x,infer_datetime_format=True).date() for x in dates]
 #dict mapping state to date of stay-at-home order
 state_date = dict(list(zip(state_wide,dates)))
 
-
 #relevant county-level socioeconomic and transit data columns
 columns = ["State","Median_Household_Income_2018","transit_scores - population weighted averages aggregated from town/city level to county"]
 
-#selecting counties from states with state-wide lockdown
-infections_data = infections_data[infections_data['FIPS'].isin(county_level_data['FIPS'])].drop('Combined_Key',axis=1)
-
 #collecting available dates for infection data
 datecols_str = infections_data.drop(['FIPS','Combined_Key'],axis=1).columns
-datecols = [pd.to_datetime(x,infer_datetime_format=True).date() for x in datecols]
+datecols = [pd.to_datetime(x,infer_datetime_format=True).date() for x in datecols_str]
 
 #gets x dates before and after a given intervention
 def get_dates(available_dates, intervention_date, number):
@@ -52,11 +48,11 @@ def ses_and_infection(state, number, ses_columns):
     infections_state = infections_data[['FIPS']+before_dates_str+after_dates_str].set_index('FIPS')
     
     #getting ses data for the state
-    ses_state = county_data[county_level_data['State']=='CA'].set_index('FIPS')[ses_columns]
+    ses_state = county_data[county_data['State']==state].set_index('FIPS')[ses_columns]
     
     return ses_state.join(infections_state)
 
 for state in state_wide:
     state_df = ses_and_infection(state,20,columns)
-    state_df.to_csv("./"+str(state)+".csv")
+    state_df.to_csv("./county_level_data/"+str(state)+".csv")
 
