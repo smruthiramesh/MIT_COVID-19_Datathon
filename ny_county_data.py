@@ -1,7 +1,7 @@
 import pandas as pd
 
-ny_data = pd.read_csv("/Users/smruthi/Downloads/New_York_State_Statewide_COVID-19_Testing.csv")
-county_codes = pd.read_csv("/Users/smruthi/Downloads/NY_Municipalities_and_County_FIPS_codes.csv")
+ny_data = pd.read_csv("./New_York_State_Statewide_COVID-19_Testing.csv")
+county_codes = pd.read_csv("./NY_Municipalities_and_County_FIPS_codes.csv")
 county_data = pd.read_csv("https://raw.githubusercontent.com/JieYingWu/COVID-19_US_County-level_Summaries/master/data/counties.csv")
 
 #fixing name error
@@ -22,6 +22,13 @@ ses_and_infection = county_data[county_data['State']=='NY'].set_index('FIPS').jo
 
 #selecting relevant columns
 ses_and_infection = ses_and_infection[relevant_ses_columns+relevant_infection_columns].drop(36000)
+
+#resetting index to create county FIPS column
+ses_and_infection.reset_index().rename(columns={'index':'FIPS'})
+
+#creating binary column that denotes whether test date is before or after stay at home order: 1 = After
+ses_and_infection['Test Date'] = pd.to_datetime(ses_and_infection['Test Date'])
+ses_and_infection['After Order'] = ses_and_infection['Test Date'].apply(lambda x: int(x > pd.to_datetime('03/22/2020')))
 
 #saving data
 ses_and_infection.to_csv("./ny_county_data/ny_county_data.csv")
